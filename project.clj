@@ -23,4 +23,8 @@
    [:dev-config
     {:env {:dev true}
      :plugins []
-     :dependencies []}]})
+     :dependencies []}]}
+
+  :repl-options
+  {:init-ns xyzzwhy.datastore})
+
