@@ -1,14 +1,9 @@
 # xyzzwhy-datastore
 
-A Clojure library designed to ... well, that part is up to you.
-
-## Usage
-
-FIXME
+This is a thin wrapper around some RethinkDB functions. They're customized for xyzzwhy's usage and the nomenclature used (classes instead of tables, for instance). It's meant to be used as a submodule for xyzzwhy and xyzzwhy-corpora. It's useless on its own.
 
 ## License
 
-Copyright © 2016 FIXME
+Copyright © 2016 Akiva R. Schoen
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
