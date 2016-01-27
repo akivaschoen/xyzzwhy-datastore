@@ -1,6 +1,6 @@
-(ns xyzzwhy-datastore.core-test
+(ns xyzzwhy.datastore.test
   (:require [clojure.test :refer :all]
-            [xyzzwhy-datastore.core :refer :all]))
+            [xyzzwhy.datastore :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
