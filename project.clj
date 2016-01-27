@@ -1,4 +1,4 @@
-(defproject xyzzwhy-datastore "1.0.0-SNAPSHOT"
+(defproject xyzzwhy/datastore "1.0.0-SNAPSHOT"
   :description "xyzzwhy's datastore wrapper for RethinkDB."
   :url "https://github.com/akivaschoen/xyzzwhy-datastore"
   :license {:name "GNU General Public License"
@@ -11,8 +11,6 @@
 
   :plugins
   [[lein-environ "1.0.1"]]
-
-  :main xyzzwhy-datastore.core
 
   :profiles
   {:uberjar

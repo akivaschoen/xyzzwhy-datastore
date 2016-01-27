@@ -1,4 +1,4 @@
-# xyzzwhy-datastore
+# xyzzwhy.datastore
 
 This is a thin wrapper around some RethinkDB functions. They're customized for xyzzwhy's usage and the nomenclature used (classes instead of tables, for instance). It's meant to be used as a submodule for xyzzwhy and xyzzwhy-corpora. It's useless on its own.
 
