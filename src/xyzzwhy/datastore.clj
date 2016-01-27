@@ -5,10 +5,6 @@
 
 (defonce db-name "xyzzwhy_corpora")
 
-(defn test
-  []
-  "guch")
-
 (defn- ->table-name
   [c]
   (-> (if (map? c)
@@ -17,6 +13,14 @@
       name
       str
       (str/replace "-" "_")))
+
+(defn- add-event
+  [c]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "events")
+        (r/insert {:name (:classname c)})
+        (r/run conn))))
 
 (defn- add-fragments
   [c]
@@ -38,6 +42,11 @@
          (println results)
          c)))))
 
+(declare list-classes)
+(defn class-exists?
+  [c]
+  (some (partial = (->table-name c)) (list-classes)))
+
 (defn- class-query
   [dsfn]
   ((fn []
@@ -53,11 +62,10 @@
 
 (defn add-class
   [c]
-  (class-action r/table-create c))
-
-(defn delete-class
-  [c]
-  (class-action r/table-drop c))
+  (class-action r/table-create c)
+  (when (= (:type c) :event)
+    (add-event c))
+  c)
 
 (defn empty-class
   [c]
@@ -82,10 +90,31 @@
 
 (defn list-classes
   []
-  (class-query r/table-list))
+  (vec (remove #{"events"} (class-query r/table-list))))
 
-(defn class-exists?
+(defn list-events
+  []
+  (class-action r/table "events"))
+
+(declare remove-event)
+(defn remove-class
   [c]
-  (some (partial = (->table-name c)) (list-classes)))
+  (let [c (if (string? c)
+            (get-class c)
+            c)]
+    (class-action r/table-drop c)
+    (when (= (:type c) :event)
+      (remove-event c))
+    c))
 
-(def reset-class (comp add-fragments add-class delete-class))
+(defn remove-event
+  [c]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "events")
+        (r/filter (r/fn [event]
+                    (r/eq (->table-name c) (r/get-field event :name))))
+        (r/delete)
+        (r/run conn))))
+
+(def reset-class (comp add-fragments add-class remove-class))
