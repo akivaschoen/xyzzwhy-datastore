@@ -1,6 +1,7 @@
 (ns xyzzwhy.datastore
   (:require [clojure.string :as str]
             [environ.core :refer [env]]
+            [pluralex.core :refer [pluralize]]
             [rethinkdb.query :as r]))
 
 (defonce db-name "xyzzwhy_corpora")
@@ -12,7 +13,8 @@
         c)
       name
       str
-      (str/replace "-" "_")))
+      (str/replace "-" "_")
+      pluralize))
 
 (defn- add-event
   [c]
@@ -75,6 +77,23 @@
         (r/delete)
         (r/run conn))))
 
+(defn fix-sub-keys
+  "Returns a map with its :sub entries' keys converted from keyword to
+  integer.
+
+  (RethinkDB converts them the opposite way when storing.)"
+  [f]
+  (if (contains? f :sub)
+    (assoc f :sub
+           (reduce (fn [acc item]
+                     (assoc acc (-> (key item)
+                                    name
+                                    Integer/parseInt)
+                            (val item)))
+                   {}
+                   (:sub f)))
+    f))
+
 (defn get-class
   [c]
   (class-action r/table c))
@@ -85,8 +104,10 @@
     (-> (r/db db-name)
         (r/table (->table-name c))
         (r/sample 1)
+        (r/without [:id])
         (r/run conn)
-        first)))
+        first
+        fix-sub-keys)))
 
 (defn list-classes
   []
