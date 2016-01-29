@@ -13,8 +13,26 @@
         c)
       name
       str
-      (str/replace "-" "_")
-      pluralize))
+      (str/replace "-" "_")))
+
+(declare add-event add-config class-action)
+(defn add-class
+  [c]
+  (class-action r/table-create c)
+  (when (= (:type c) :event)
+    (add-event c))
+  (when (contains? c :config)
+    (add-config c))
+  c)
+
+(defn- add-config
+  [c]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "configs")
+        (r/insert {:name (:classname c)
+                   :config (:config c)})
+        (r/run conn))))
 
 (defn- add-event
   [c]
@@ -62,12 +80,22 @@
   (with-open [conn (r/connect)]
     (r/run (r/db-create db-name) conn)))
 
-(defn add-class
-  [c]
-  (class-action r/table-create c)
-  (when (= (:type c) :event)
-    (add-event c))
-  c)
+(defn setup-database
+  []
+  (with-open [conn (r/connect)]
+    (class-action r/table-create "events")
+    (-> (r/db db-name)
+        (r/table "events")
+        (r/index-create "name" (r/fn [row]
+                                 (r/get-field row :name)))
+        (r/run conn))
+
+    (class-action r/table-create "configs")
+    (-> (r/db db-name)
+        (r/table "configs")
+        (r/index-create "name" (r/fn [row]
+                                 (r/get-field row :name)))
+        (r/run conn))))
 
 (defn empty-class
   [c]
@@ -126,7 +154,7 @@
 
 (defn list-classes
   []
-  (vec (remove #{"events"} (class-query r/table-list))))
+  (vec (remove #{"events" "configs"} (class-query r/table-list))))
 
 (defn list-events
   []
