@@ -77,7 +77,21 @@
         (r/delete)
         (r/run conn))))
 
-(defn fix-sub-keys
+(defn- fix-values [m]
+  (reduce (fn [acc item]
+            (assoc acc (first item)
+                   (cond
+                     (string? (second item)) (keyword (second item))
+                     (vector? (second item)) (mapv keyword (second item))
+                     (= :text (first item)) (second item)
+                     :else
+                     (second item))))
+          {}
+          m))
+
+;; There has to be a better way to do this. An assoc inside of a reduce
+;; inside of an assoc inside of a reduce inside of assoc? GTFO.
+(defn- fix-sub-keys
   "Returns a map with its :sub entries' keys converted from keyword to
   integer.
 
@@ -89,10 +103,11 @@
                      (assoc acc (-> (key item)
                                     name
                                     Integer/parseInt)
-                            (val item)))
+                            (fix-values (val item))))
                    {}
                    (:sub f)))
     f))
+
 
 (defn get-class
   [c]
