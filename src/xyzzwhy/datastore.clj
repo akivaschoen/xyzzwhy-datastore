@@ -15,32 +15,21 @@
       str
       (str/replace "-" "_")))
 
-(declare add-event add-config class-action)
-(defn add-class
+(declare class-action)
+(defn- create-class
   [c]
   (class-action r/table-create c)
-  (when (= (:type c) :event)
-    (add-event c))
-  (when (contains? c :config)
-    (add-config c))
   c)
 
-(defn- add-config
+(defn- add-metadata
   [c]
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
-        (r/table "configs")
+        (r/table "classes")
         (r/insert {:name (:classname c)
                    :config (:config c)})
-        (r/run conn))))
-
-(defn- add-event
-  [c]
-  (with-open [conn (r/connect)]
-    (-> (r/db db-name)
-        (r/table "events")
-        (r/insert {:name (:classname c)})
-        (r/run conn))))
+        (r/run conn)))
+  c)
 
 (defn- add-fragments
   [c]
@@ -62,11 +51,6 @@
          (println results)
          c)))))
 
-(declare list-classes)
-(defn class-exists?
-  [c]
-  (some (partial = (->table-name c)) (list-classes)))
-
 (defn- class-query
   [dsfn]
   ((fn []
@@ -75,34 +59,51 @@
            dsfn
            (r/run conn))))))
 
-(defn create-database
+(defn- create-database
   []
   (with-open [conn (r/connect)]
     (r/run (r/db-create db-name) conn)))
 
-(defn setup-database
-  []
-  (with-open [conn (r/connect)]
-    (class-action r/table-create "events")
-    (-> (r/db db-name)
-        (r/table "events")
-        (r/index-create "name" (r/fn [row]
-                                 (r/get-field row :name)))
-        (r/run conn))
+(declare get-class)
+(defn- delete-class
+  [c]
+  (let [c (if (string? c)
+            (get-class c)
+            c)]
+    (class-action r/table-drop c)
+    c))
 
-    (class-action r/table-create "configs")
-    (-> (r/db db-name)
-        (r/table "configs")
-        (r/index-create "name" (r/fn [row]
-                                 (r/get-field row :name)))
-        (r/run conn))))
-
-(defn empty-class
+(defn- delete-fragments
   [c]
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
         (r/table (->table-name c))
         (r/delete)
+        (r/run conn))))
+
+(defn- delete-metadata
+  [c]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "classes")
+        (r/filter (r/fn [table]
+                    (r/eq (->table-name c) (r/get-field table :name))))
+        (r/delete)
+        (r/run conn))))
+
+(defn- initialize-database
+  []
+  (with-open [conn (r/connect)]
+    (class-action r/table-create "classes")
+    (-> (r/db db-name)
+        (r/table "classes")
+        (r/index-create "name" (r/fn [row]
+                                      (r/get-field row :classname)))
+        (r/run conn))
+    (-> (r/db db-name)
+        (r/table "classes")
+        (r/index-create "type" (r/fn [row]
+                                 (r/get-field row :type)))
         (r/run conn))))
 
 (defn- fix-values [m]
@@ -137,15 +138,23 @@
     f))
 
 
+;;
+;; Public API
+;;
+(declare list-classes)
+(defn class-exists?
+  [c]
+  (some (partial = (->table-name c)) (list-classes)))
+
 (defn get-class
   [c]
   (class-action r/table c))
 
-(defn get-config
+(defn get-metadata
   [c]
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
-        (r/table "configs")
+        (r/table "classes")
         (r/get-all [(->table-name c)] {:index "name"})
         (r/pluck [:config])
         (r/run conn)
@@ -164,31 +173,8 @@
 
 (defn list-classes
   []
-  (vec (remove #{"events" "configs"} (class-query r/table-list))))
+  (vec (remove #{"classes"} (class-query r/table-list))))
 
-(defn list-events
-  []
-  (class-action r/table "events"))
-
-(declare remove-event)
-(defn remove-class
-  [c]
-  (let [c (if (string? c)
-            (get-class c)
-            c)]
-    (class-action r/table-drop c)
-    (when (= (:type c) :event)
-      (remove-event c))
-    c))
-
-(defn remove-event
-  [c]
-  (with-open [conn (r/connect)]
-    (-> (r/db db-name)
-        (r/table "events")
-        (r/filter (r/fn [event]
-                    (r/eq (->table-name c) (r/get-field event :name))))
-        (r/delete)
-        (r/run conn))))
-
-(def reset-class (comp add-fragments add-class remove-class))
+(def add-class (comp add-fragments add-metadata create-class))
+(def reload-fragments (comp add-fragments delete-fragments))
+(def remove-class (comp delete-metadata delete-class))
