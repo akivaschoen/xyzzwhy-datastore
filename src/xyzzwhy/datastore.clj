@@ -118,7 +118,7 @@
           m))
 
 ;; There has to be a better way to do this. An assoc inside of a reduce
-;; inside of an assoc inside of a reduce inside of assoc? GTFO.
+;; inside of an assoc inside of a reduce inside of an assoc? GTFO.
 (defn- fix-sub-keys
   "Returns a map with its :sub entries' keys converted from keyword to
   integer.
@@ -140,6 +140,16 @@
 (defn get-class
   [c]
   (class-action r/table c))
+
+(defn get-config
+  [c]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "configs")
+        (r/get-all [(->table-name c)] {:index "name"})
+        (r/pluck [:config])
+        (r/run conn)
+        first)))
 
 (defn get-fragment
   [c]
