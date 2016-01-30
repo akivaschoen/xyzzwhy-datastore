@@ -164,7 +164,7 @@
         (r/table "classes")
         #_(r/get-all [(->table-name c)] {:index "name"})
         (r/filter {:name (->table-name c)})
-        (r/without [:id])
+        (r/without [:id :name])
         (r/run conn)
         first)))
 
