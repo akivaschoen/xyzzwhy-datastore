@@ -27,7 +27,8 @@
     (-> (r/db db-name)
         (r/table "classes")
         (r/insert {:name (:classname c)
-                   :config (:config c)})
+                   :config (:config c)
+                   :type (:type c)})
         (r/run conn)))
   c)
 
@@ -64,7 +65,6 @@
   (with-open [conn (r/connect)]
     (r/run (r/db-create db-name) conn)))
 
-(declare get-class)
 (defn- delete-class
   [c]
   (let [c (if (string? c)
@@ -137,6 +137,13 @@
                    (:sub f)))
     f))
 
+(defn get-classes
+  [t]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "classes")
+        (r/get-all [(->table-name t)] {:index "type"})
+        (r/run conn))))
 
 ;;
 ;; Public API
@@ -155,8 +162,9 @@
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
         (r/table "classes")
-        (r/get-all [(->table-name c)] {:index "name"})
-        (r/pluck [:config])
+        #_(r/get-all [(->table-name c)] {:index "name"})
+        (r/filter {:name (->table-name c)})
+        (r/without [:id])
         (r/run conn)
         first)))
 
@@ -174,6 +182,10 @@
 (defn list-classes
   []
   (vec (remove #{"classes"} (class-query r/table-list))))
+
+(defn list-events
+  []
+  (with-open [conn (r/connect)]))
 
 (def add-class (comp add-fragments add-metadata create-class))
 (def reload-fragments (comp add-fragments delete-fragments))
