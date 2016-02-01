@@ -65,6 +65,7 @@
   (with-open [conn (r/connect)]
     (r/run (r/db-create db-name) conn)))
 
+(declare get-class)
 (defn- delete-class
   [c]
   (let [c (if (string? c)
