@@ -11,7 +11,9 @@
    [pluralex "1.0.0-SNAPSHOT"]]
 
   :plugins
-  [[lein-environ "1.0.1"]]
+  [[lein-autoexpect "1.7.0"]
+   [lein-environ "1.0.1"]
+   [lein-expectations "0.0.8"]]
 
   :profiles
   {:uberjar
@@ -24,8 +26,5 @@
    [:dev-config
     {:env {:dev true}
      :plugins []
-     :dependencies []}]}
-
-  :repl-options
-  {:init-ns xyzzwhy.datastore})
+     :dependencies [[expectations "2.1.4"]]}]})
 
