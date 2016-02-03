@@ -1,7 +1,6 @@
 (ns xyzzwhy.datastore
   (:require [clojure.string :as str]
             [environ.core :refer [env]]
-            [pluralex.core :refer [pluralize]]
             [rethinkdb.query :as r]))
 
 (defonce db-name "xyzzwhy_corpora")
@@ -29,7 +28,7 @@
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
         (r/table "classes")
-        (r/insert {:name (:classname c)
+        (r/insert {:name (->table-name (:classname c))
                    :config (:config c)
                    :type (:type c)})
         (r/run conn)))
@@ -41,7 +40,7 @@
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
         (r/table (->table-name c))
-        (r/insert (:fragments c))
+        (r/insert (:fragment c))
         (r/run conn))))
 
 ;; Existing in a pre-macro state (probably)
@@ -72,7 +71,7 @@
 (defn- delete-class
   [c]
   (let [c (if (string? c)
-            (get-class c)
+            (get-class (->table-name c))
             c)]
     (class-action r/table-drop c)
     c))
@@ -102,7 +101,7 @@
     (-> (r/db db-name)
         (r/table "classes")
         (r/index-create "name" (r/fn [row]
-                                      (r/get-field row :classname)))
+                                 (r/get-field row :classname)))
         (r/run conn))
     (-> (r/db db-name)
         (r/table "classes")
