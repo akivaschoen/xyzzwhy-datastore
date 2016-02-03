@@ -8,12 +8,15 @@
 
 (defn- ->table-name
   [c]
-  (-> (if (map? c)
-        (:classname c)
-        c)
-      name
-      str
-      (str/replace "-" "_")))
+  (let [n (-> (if (map? c)
+                (:classname c)
+                c)
+              name
+              str
+              (str/replace "-" "_"))]
+    (if (str/ends-with? n "s")
+      n
+      (str n "s"))))
 
 (declare class-action)
 (defn- create-class
@@ -107,6 +110,8 @@
                                  (r/get-field row :type)))
         (r/run conn))))
 
+;; There has to be a better way to do this. An assoc inside of a reduce
+;; inside of an assoc inside of a reduce inside of an assoc? GTFO.
 (defn- fix-values [m]
   (reduce (fn [acc item]
             (assoc acc (first item)
@@ -119,8 +124,6 @@
           {}
           m))
 
-;; There has to be a better way to do this. An assoc inside of a reduce
-;; inside of an assoc inside of a reduce inside of an assoc? GTFO.
 (defn- fix-sub-keys
   "Returns a map with its :sub entries' keys converted from keyword to
   integer.
