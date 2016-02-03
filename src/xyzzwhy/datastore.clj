@@ -109,36 +109,37 @@
                                  (r/get-field row :type)))
         (r/run conn))))
 
-;; There has to be a better way to do this. An assoc inside of a reduce
-;; inside of an assoc inside of a reduce inside of an assoc? GTFO.
-(defn- fix-values [m]
+(defn- cast-values
+  "Returns a map with its values converted to keywords as necessary."
+  [m]
   (reduce (fn [acc item]
             (assoc acc (first item)
                    (cond
-                     (string? (second item)) (keyword (second item))
-                     (vector? (second item)) (mapv keyword (second item))
                      (= :text (first item)) (second item)
+                     (string? (second item)) (keyword (second item))
+                     (and (vector? (second item))
+                          (not= :prep (first item))) (mapv keyword (second item))
                      :else
                      (second item))))
           {}
           m))
 
-(defn- fix-sub-keys
+(defn- fix-sub-map
   "Returns a map with its :sub entries' keys converted from keyword to
   integer.
 
   (RethinkDB converts them the opposite way when storing.)"
-  [f]
-  (if (contains? f :sub)
-    (assoc f :sub
+  [fragment]
+  (if (contains? fragment :sub)
+    (assoc fragment :sub
            (reduce (fn [acc item]
                      (assoc acc (-> (key item)
                                     name
                                     Integer/parseInt)
-                            (fix-values (val item))))
+                            (cast-values (val item))))
                    {}
-                   (:sub f)))
-    f))
+                   (:sub fragment)))
+    fragment))
 
 (defn get-classes
   [t]
@@ -180,7 +181,8 @@
         (r/without [:id])
         (r/run conn)
         first
-        fix-sub-keys)))
+        fix-sub-map
+        cast-values)))
 
 (defn list-classes
   []
