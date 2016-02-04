@@ -28,8 +28,8 @@
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
         (r/table "classes")
-        (r/insert {:name (->table-name (:classname c))
-                   :config (:config c)
+        (r/insert {:name (:classname c)
+                   :config (vec (:config c))
                    :type (:type c)})
         (r/run conn)))
   c)
@@ -116,9 +116,10 @@
             (assoc acc (first item)
                    (cond
                      (= :text (first item)) (second item)
+                     (= :config (first item)) (into #{} (map keyword (second item)))
                      (string? (second item)) (keyword (second item))
-                     (and (vector? (second item))
-                          (not= :prep (first item))) (mapv keyword (second item))
+;;                     (and (vector? (second item))
+;;                          (not= :prep (first item))) (mapv keyword (second item))
                      :else
                      (second item))))
           {}
@@ -161,17 +162,6 @@
   [c]
   (class-action r/table c))
 
-(defn get-metadata
-  [c]
-  (with-open [conn (r/connect)]
-    (-> (r/db db-name)
-        (r/table "classes")
-        #_(r/get-all [(->table-name c)] {:index "name"})
-        (r/filter {:name (->table-name c)})
-        (r/without [:id :name])
-        (r/run conn)
-        first)))
-
 (defn get-fragment
   [c]
   (with-open [conn (r/connect)]
@@ -184,14 +174,21 @@
         fix-sub-map
         cast-values)))
 
+(defn get-metadata
+  [c]
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "classes")
+        #_(r/get-all [(->table-name c)] {:index "name"})
+        (r/filter {:name c})
+        (r/without [:id :name])
+        (r/run conn)
+        first)))
+
 (defn list-classes
   []
   (vec (remove #{"classes"} (class-query r/table-list))))
 
-(defn list-events
-  []
-  (with-open [conn (r/connect)]))
-
-(def add-class (comp add-fragments add-metadata create-class))
+(def add-class (comp add-metadata add-fragments add-metadata create-class))
 (def reload-fragments (comp add-fragments delete-fragments))
 (def remove-class (comp delete-metadata delete-class))
