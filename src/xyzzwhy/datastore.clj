@@ -29,7 +29,7 @@
     (-> (r/db db-name)
         (r/table "classes")
         (r/insert {:name (:classname c)
-                   :config (vec (:config c))
+                   :config (:config c)
                    :type (:type c)})
         (r/run conn)))
   c)
@@ -41,7 +41,8 @@
     (-> (r/db db-name)
         (r/table (->table-name c))
         (r/insert (:fragment c))
-        (r/run conn))))
+        (r/run conn)))
+  c)
 
 ;; Existing in a pre-macro state (probably)
 (defn- class-action
@@ -116,10 +117,8 @@
             (assoc acc (first item)
                    (cond
                      (= :text (first item)) (second item)
-                     (= :config (first item)) (into #{} (map keyword (second item)))
+                     (= :config (first item)) (mapv keyword (second item))
                      (string? (second item)) (keyword (second item))
-;;                     (and (vector? (second item))
-;;                          (not= :prep (first item))) (mapv keyword (second item))
                      :else
                      (second item))))
           {}
@@ -189,6 +188,6 @@
   []
   (vec (remove #{"classes"} (class-query r/table-list))))
 
-(def add-class (comp add-metadata add-fragments add-metadata create-class))
+(def add-class (comp add-metadata add-fragments create-class))
 (def reload-fragments (comp add-fragments delete-fragments))
 (def remove-class (comp delete-metadata delete-class))
