@@ -4,6 +4,8 @@
   :license {:name "GNU General Public License"
             :url "http://www.gnu.org/licenses/gpl.html"}
 
+  :min-lein-version "2.6.1"
+
   :dependencies
   [[org.clojure/clojure "1.8.0"]
    [com.apa512/rethinkdb "0.12.2-SNAPSHOT"]
