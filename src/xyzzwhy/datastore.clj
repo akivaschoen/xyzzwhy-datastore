@@ -152,7 +152,9 @@
             (assoc acc (first item)
                    (cond
                      (= :text (first item)) (second item)
-                     (= :config (first item)) (mapv keyword (second item))
+                     (= :prep (first item)) (second item)
+                     (= :article (first item)) (second item)
+                     (= :config (first item)) (into #{} (map keyword (second item)))
                      (string? (second item)) (keyword (second item))
                      :else
                      (second item))))
@@ -215,8 +217,7 @@
         (r/without [:id])
         (r/run conn)
         first
-        #_fix-sub-map
-        #_cast-values)))
+        fix-sub-map)))
 
 (defn get-metadata
   [c]
