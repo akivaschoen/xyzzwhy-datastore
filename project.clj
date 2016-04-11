@@ -8,7 +8,7 @@
 
   :dependencies
   [[org.clojure/clojure "1.8.0"]
-   [com.apa512/rethinkdb "0.12.2-SNAPSHOT"]
+   [com.apa512/rethinkdb "0.15.12"]
    [environ "1.0.2"]
    [pluralex "1.0.0-SNAPSHOT"]]
 
@@ -25,8 +25,7 @@
      :aot :all}]
 
    :dev
-   [:dev-config
-    {:env {:dev true}
-     :plugins []
-     :dependencies [[expectations "2.1.4"]]}]})
+   {:env {:dev true}
+    :plugins []
+    :dependencies [[expectations "2.1.4"]]}})
 
