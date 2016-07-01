@@ -5,7 +5,7 @@
 
 (defonce db-name "xyzzwhy_corpora")
 
-(defn- ->table-name
+(defn ->table-name
   [c]
   (let [n (-> (if (map? c)
                 (:classname c)
@@ -19,12 +19,12 @@
 
 (declare class-action get-class-info)
 
-(defn- create-class
+(defn create-class
   [c]
   (class-action r/table-create c)
   (merge c (get-class-info c)))
 
-(defn- add-metadata
+(defn add-metadata
   [c]
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
@@ -36,7 +36,7 @@
         (r/run conn)))
   c)
 
-(defn- add-fragments
+(defn add-fragments
   [c]
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
@@ -46,7 +46,7 @@
   c)
 
 ;; Existing in a pre-macro state (probably)
-(defn- class-action
+(defn class-action
   [dsfn c]
   ((fn []
      (with-open [conn (r/connect)]
@@ -54,7 +54,7 @@
            (dsfn (->table-name c))
            (r/run conn))))))
 
-(defn- class-query
+(defn class-query
   [dsfn]
   ((fn []
      (with-open [conn (r/connect)]
@@ -62,12 +62,12 @@
            dsfn
            (r/run conn))))))
 
-(defn- create-database
+(defn create-database
   []
   (with-open [conn (r/connect)]
     (r/run (r/db-create db-name) conn)))
 
-(defn- delete-class
+(defn delete-class
   [c]
   (let [c (if (or (string? c)
                   (keyword? c))
@@ -76,7 +76,7 @@
     (class-action r/table-drop (:name c))
     c))
 
-(defn- delete-fragments
+(defn delete-fragments
   [c]
   (let [c (if (or (string? c)
                   (keyword? c))
@@ -84,12 +84,12 @@
             c)]
     (with-open [conn (r/connect)]
       (-> (r/db db-name)
-          (r/table (:name c))
+          (r/table (->table-name (:classname c)))
           (r/delete)
           (r/run conn)))
     c))
 
-(defn- delete-metadata
+(defn delete-metadata
   [c]
   (let [c (if (or (string? c)
                   (keyword? c))
@@ -104,7 +104,7 @@
           (r/run conn)))
     c))
 
-(defn- initialize-database
+(defn initialize-database
   []
   (with-open [conn (r/connect)]
     (class-action r/table-create "classes")
@@ -145,7 +145,7 @@
              (second x)))
     x))
 
-(defn- cast-values
+(defn cast-values
   "Returns a map with its values converted to keywords as necessary."
   [m]
   (reduce (fn [acc item]
@@ -161,7 +161,7 @@
           {}
           m))
 
-(defn- fix-sub-map
+(defn fix-sub-map
   "Returns a map with its :sub entries' keys converted from keyword to
   integer.
 
