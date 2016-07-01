@@ -1,6 +1,7 @@
 (ns xyzzwhy.datastore
   (:require [clojure.string :as str]
             [environ.core :refer [env]]
+            [pluralex.core :as pl]
             [rethinkdb.query :as r]))
 
 (defonce db-name "xyzzwhy_corpora")
@@ -13,9 +14,7 @@
               name
               str
               (str/replace "-" "_"))]
-    (if (str/ends-with? n "s")
-      n
-      (str n "s"))))
+    (pl/pluralize n)))
 
 (declare class-action get-class-info)
 
