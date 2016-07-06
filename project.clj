@@ -24,15 +24,7 @@
 
    :dev
     {:env {:dev "true"}
-     :source-paths ["dev"]
-     :dependencies [[pjstadig/humane-test-output "0.8.0"]
-                    [leiningen "2.6.1"]]
-     :plugins [[com.jakemccrary/lein-test-refresh "0.16.0"]]
-     :injections [(require 'pjstadig.humane-test-output)
-                  (pjstadig.humane-test-output/activate!)]
-     :test-refresh {:notify-command ["terminal-notifier" "-title" "Tests" "-message"]
-                    :quiet true
-                    :changes-only true}}}
+     :source-paths ["dev"]}}
 
   :repl-options
   {:caught clj-stacktrace.repl/pst+})
