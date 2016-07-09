@@ -177,9 +177,10 @@
         (r/table "classes")
         #_(r/get-all [(table-name c)] {:index "name"})
         (r/filter {:name c})
-        (r/without [:id :name])
+        (r/without [:id :name :type])
         (r/run conn)
-        first)))
+        first
+        submap)))
 
 (defn classes
   []
