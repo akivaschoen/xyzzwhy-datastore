@@ -161,14 +161,16 @@
 
 (defn get-fragment
   [c]
-  (with-open [conn (r/connect)]
-    (-> (r/db db-name)
-        (r/table (table-name c))
-        (r/sample 1)
-        (r/without [:id])
-        (r/run conn)
-        first
-        (update :sub #(mapv submap %)))))
+  (let [fr (with-open [conn (r/connect)]
+             (-> (r/db db-name)
+                 (r/table (table-name c))
+                 (r/sample 1)
+                 (r/without [:id])
+                 (r/run conn)
+                 first))]
+    (if (contains? fr :sub)
+      (update fr :sub #(mapv submap %))
+      fr)))
 
 (defn get-metadata
   [c]
