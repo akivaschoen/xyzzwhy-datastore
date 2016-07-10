@@ -177,9 +177,8 @@
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
         (r/table "classes")
-        #_(r/get-all [(table-name c)] {:index "name"})
         (r/filter {:name c})
-        (r/without [:id :name :type])
+        (r/without [:id])
         (r/run conn)
         first
         submap)))
@@ -204,9 +203,10 @@
         (r/table "classes")
         (r/filter {:type "event"})
         (r/sample 1)
-        (r/pluck [:name])
+        (r/without [:id])
         (r/run conn)
-        first)))
+        first
+        submap)))
 
 (def add-class (comp add-metadata add-fragments create-class))
 (def reload-fragments (comp add-fragments delete-fragments))
