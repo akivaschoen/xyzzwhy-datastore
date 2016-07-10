@@ -134,7 +134,12 @@
 (defn submap
   "Returns a configuration map for a substitution."
   [smap]
-  (into {} (mapcat #(assoc {} (key %) (value %)) smap)))
+  (let [smap' (into {} (mapcat #(assoc {} (key %) (value %)) smap))]
+    (if (contains? smap' :name)
+      (-> smap'
+          (assoc :class (:name smap'))
+          (dissoc :name))
+      smap')))
 
 
 ;;
