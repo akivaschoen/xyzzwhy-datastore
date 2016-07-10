@@ -188,7 +188,7 @@
   []
   (vec (remove #{"classes"} (class-query r/table-list))))
 
-(defn events
+(defn get-events
   []
   (with-open [conn (r/connect)]
     (-> (r/db db-name)
@@ -196,6 +196,17 @@
         (r/filter {:type "event"})
         (r/pluck [:name])
         (r/run conn))))
+
+(defn get-event
+  []
+  (with-open [conn (r/connect)]
+    (-> (r/db db-name)
+        (r/table "classes")
+        (r/filter {:type "event"})
+        (r/sample 1)
+        (r/pluck [:name])
+        (r/run conn)
+        first)))
 
 (def add-class (comp add-metadata add-fragments create-class))
 (def reload-fragments (comp add-fragments delete-fragments))
