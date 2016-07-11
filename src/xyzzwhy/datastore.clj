@@ -141,10 +141,9 @@
           (dissoc :name))
       smap')))
 
-
-;;
+;; -------
 ;; Public API
-;;
+;; -------
 (declare list-classes)
 
 (defn class-exists?
@@ -207,6 +206,9 @@
     (-> (r/db db-name)
         (r/table "classes")
         (r/filter {:type "event"})
+        (r/filter (r/fn [row]
+                    (r/and (r/ne "secondary-event" (r/get-field row "name"))
+                          (r/ne "tertiary-event" (r/get-field row "name")))))
         (r/sample 1)
         (r/without [:id])
         (r/run conn)
